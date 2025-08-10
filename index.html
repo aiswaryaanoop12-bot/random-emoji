@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Emoji Generator</title>
+  <style>
+    :root{
+      --bg:#0f1724;
+      --card:#0b1220;
+      --accent:#10b981;
+      --muted:#94a3b8;
+    }
+    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,"Segoe UI","Noto Color Emoji","Apple Color Emoji","Segoe UI Emoji",sans-serif;background:linear-gradient(180deg,#07102a 0%, #0b1330 100%);color:#eef2ff}
+    .wrap{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      box-sizing:border-box;
+    }
+    .card{
+      width:100%;
+      max-width:520px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border-radius:16px;
+      padding:22px;
+      box-shadow: 0 10px 30px rgba(2,6,23,0.6);
+      border:1px solid rgba(255,255,255,0.03);
+    }
+    .title{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+    .title h1{font-size:18px;margin:0}
+    .title small{color:var(--muted)}
+    .emoji-stage{
+      display:flex;
+      align-items:center;
+      gap:18px;
+      padding:18px;
+      border-radius:12px;
+      background:rgba(255,255,255,0.015);
+      margin-bottom:16px;
+    }
+    .emoji{
+      font-size:96px;
+      line-height:1;
+      width:140px;
+      height:140px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:12px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
+      box-shadow: inset 0 -6px 18px rgba(0,0,0,0.25);
+    }
+    .meta{
+      flex:1;
+      min-width:0;
+    }
+    .meta p{margin:0 0 8px 0;color:var(--muted)}
+    .controls{display:flex;gap:10px;flex-wrap:wrap}
+    button{
+      appearance:none;
+      border:0;
+      padding:10px 14px;
+      border-radius:10px;
+      font-weight:600;
+      cursor:pointer;
+      background:#0ea5a4;
+      color:#042027;
+    }
+    button.ghost{
+      background:transparent;
+      border:1px solid rgba(255,255,255,0.06);
+      color:var(--muted);
+    }
+    .small{padding:8px 10px;font-size:14px}
+    .hint{font-size:13px;color:var(--muted);margin-top:8px}
+    footer{margin-top:12px;color:var(--muted);font-size:13px;text-align:right}
+    /* responsive */
+    @media (max-width:420px){
+      .emoji{font-size:72px;width:110px;height:110px}
+      .card{padding:16px}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" role="main" aria-labelledby="title">
+      <div class="title">
+        <h1 id="title">Emoji Generator</h1>
+        <small>Random emoji each run</small>
+      </div>
+
+      <div class="emoji-stage" aria-live="polite">
+        <div class="emoji" id="emojiDisplay" aria-hidden="false">😀</div>
+
+        <div class="meta">
+          <p id="emojiName">Click "New Emoji" — or refresh the page.</p>
+
+          <div class="controls">
+            <button id="newBtn">New Emoji</button>
+            <button id="copyBtn" class="ghost small">Copy</button>
+            <button id="downloadBtn" class="small">Download PNG</button>
+            <button id="shuffleBtn" class="ghost small">Auto Shuffle</button>
+          </div>
+
+          <p class="hint">Tip: You can download the emoji as an image for your submission.</p>
+        </div>
+      </div>
+
+      <canvas id="canvas" width="800" height="800" style="display:none"></canvas>
+      <footer>Saved script & sample image ready for submission</footer>
+    </div>
+  </div>
+
+  <script>
+    // Emoji list (add/remove as you like)
+    const EMOJIS = [
+      "😀","😅","😂","🤣","😊","😍","😎","🤩","😉","😘",
+      "😜","🤔","😴","🤯","😇","🙃","🤪","😬","🤖","👻",
+      "🎯","🏆","🔥","🌟","💯","🎉","🍕","🍩","☕","🍀"
+    ];
+
+    const emojiEl = document.getElementById('emojiDisplay');
+    const nameEl = document.getElementById('emojiName');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    function pickRandom() {
+      return EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
+    }
+
+    function setEmoji(e) {
+      emojiEl.textContent = e;
+      nameEl.textContent = "Emoji: " + e;
+      renderCanvas(e);
+    }
+
+    function renderCanvas(e) {
+      // Prepare high-res square canvas for download (800x800)
+      const size = 800;
+      canvas.width = size;
+      canvas.height = size;
+      // background
+      ctx.fillStyle = "#0b1220";
+      ctx.fillRect(0,0,size,size);
+      // big emoji text (try to allow emoji fonts)
+      const fontSize = Math.round(size * 0.6);
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = ${fontSize}px system-ui, "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji";
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(e, size/2, size*0.48);
+      // caption
+      ctx.font = ${size * 0.06}px Inter, system-ui, sans-serif;
+      ctx.fillStyle = "#9fb7c6";
+      ctx.fillText("Random Emoji", size/2, size*0.88);
+    }
+
+    // Buttons
+    const newBtn = document.getElementById('newBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const shuffleBtn = document.getElementById('shuffleBtn');
+
+    newBtn.addEventListener('click', ()=> setEmoji(pickRandom()));
+
+    copyBtn.addEventListener('click', async () => {
+      const emoji = emojiEl.textContent || '';
+      try{
+        await navigator.clipboard.writeText(emoji);
+        copyBtn.textContent = "Copied!";
+        setTimeout(()=> copyBtn.textContent = "Copy", 1200);
+      }catch(e){
+        copyBtn.textContent = "Copy Failed";
+        setTimeout(()=> copyBtn.textContent = "Copy", 1200);
+      }
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      // Ensure latest rendered
+      renderCanvas(emojiEl.textContent || "😀");
+      const url = canvas.toDataURL("image/png");
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'emoji.png';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    });
+
+    // Auto shuffle toggle
+    let shuffling = false;
+    let shuffleInterval = null;
+    shuffleBtn.addEventListener('click', () => {
+      if(!shuffling){
+        shuffling = true;
+        shuffleBtn.textContent = "Stop Auto";
+        shuffleBtn.classList.remove('ghost');
+        shuffleInterval = setInterval(()=> setEmoji(pickRandom()), 700);
+      }else{
+        shuffling = false;
+        shuffleBtn.textContent = "Auto Shuffle";
+        shuffleBtn.classList.add('ghost');
+        clearInterval(shuffleInterval);
+      }
+    });
+
+    // Run once on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      const first = pickRandom();
+      setEmoji(first);
+    });
+
+    // Accessibility: allow space/enter to trigger New Emoji
+    newBtn.addEventListener('keydown', (ev) => {
+      if(ev.key === ' ' || ev.key === 'Enter') {
+        ev.preventDefault();
+        newBtn.click();
+      }
+    });
+  </script>
+</body>
+</html>
